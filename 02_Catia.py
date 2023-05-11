@@ -12,11 +12,17 @@ partDocument1 = documents1.Add("Part")
 
 part1 = partDocument1.Part
 
-hybridBodies1 = part1.HybridBodies
+bodies1 = part1.Bodies
 
-hybridBody1 = hybridBodies1.Item("Geometrical Set.1")
+body1 = bodies1.Item("PartBody")
 
-sketches1 = hybridBody1.HybridSketches
+sketches1 = body1.Sketches
+
+# hybridBodies1 = part1.HybridBodies
+
+# hybridBody1 = hybridBodies1.Item("Geometrical Set.1")
+
+# sketches1 = hybridBody1.HybridSketches
 
 originElements1 = part1.OriginElements
 
@@ -174,7 +180,8 @@ length2.Value = 10.000000
 
 sketch1.CloseEdition 
 
-part1.InWorkObject = hybridBody1
+# part1.InWorkObject = hybridBody1
+part1.InWorkObject = body1
 
 part1.Update 
 
