@@ -43,10 +43,12 @@ body4 = bodies1.Add() # Adding new body in part1
 body4.Name = "Surfaces" # Naming new body as "Surfaces"
 
 # Loading point coordinated from text file
-RootAirfoil = np.array([[10.00000, 10.00000, 0.000000]])
+RootAirfoil = np.array([[10.00000, 10.00000, 0.000000], 
+                        [20.00000, 20.00000, 0.000000]])
 #RootAirfoil = np.loadtxt('data/clarky.dat',skiprows=1)
 
-TipAirfoil = np.array([[10.000000, 25.000000, 0.000000]])
+TipAirfoil = np.array([[10.000000, 25.000000, 10.000000], 
+                       [20.000000, 25.000000, 10.000000]])
 #TipAirfoil = np.loadtxt('data/clarky.dat',skiprows=1)
 
 # Creating new point [0,0,0] in Wireframe
@@ -73,45 +75,66 @@ twistAxis1 = ShFactory.AddNewLinePtDir(twistRef1, twistDir1, 0.000000, 20.000000
 
 # Starting new spline for root section
 spline1 = ShFactory.AddNewSpline()
-
 spline1.SetSplineType(0)
-
 spline1.SetClosing(0)
 
-print("##########")
-print(len(RootAirfoil))
-print(RootAirfoil)
+# print("##########")
+# print(f'RootAirfoil.shape = {RootAirfoil.shape[:]}')
+# print(RootAirfoil)
 
 # Filling the spline with points
-for i in range(0,len(RootAirfoil)):
-#for i in range(0,1):
-    #PT = RootAirfoil[i]*100 # coordinates are 0..1 which is too small for CATIA
-    PT = RootAirfoil[i] # coordinates are 0..1 which is too small for CATIA
-    point = ShFactory.AddNewPointCoord(PT[0],PT[1],0.0)# coordinates are 2D, Z=0.0
-    spline1.AddPoint(point) # new point to spline is added
-print(PT)
-ShFactory.GSMVisibility(spline1,0) # hide the spline
+def Fill_Spline_With_Points(pointsAirfoil, visibility=False):
+    
+    spline = ShFactory.AddNewSpline()
+    spline.SetSplineType(0)
+    spline.SetClosing(0)
+    
+    for i in range(0,len(pointsAirfoil)):
+        
+        PT = pointsAirfoil[i] # coordinates are 0..1 which is too small for CATIA
+        print(PT)
+        point = ShFactory.AddNewPointCoord(PT[0],PT[1],0.0)# coordinates are 2D, Z=0.0
+        spline.AddPoint(point) # new point to spline is added
+    if visibility:
+        ShFactory.GSMVisibility(spline,1) # show the spline
+    else:
+        ShFactory.GSMVisibility(spline,0) # hide the spline
 
-# Starting new spline for tip section
-spline2 = ShFactory.AddNewSpline()
-spline2.SetSplineType(0)
-spline2.SetClosing(0)
+    return spline
 
-# Filling the spline with points
-for i in range(0,len(TipAirfoil)):
-#for i in range(0,1):
-    #PT = TipAirfoil[i]*100
-    PT = TipAirfoil[i]
-    point = ShFactory.AddNewPointCoord(PT[0],PT[1],0.0)
-    spline2.AddPoint(point)
-ShFactory.GSMVisibility(spline2,0)
+
+spline1 = Fill_Spline_With_Points(RootAirfoil,0)
+
+spline2 = Fill_Spline_With_Points(TipAirfoil,0)
+
+
+
+# for i in range(0,len(RootAirfoil)):
+
+#     PT = RootAirfoil[i]
+#     point = ShFactory.AddNewPointCoord(PT[0],PT[1],0.0)# coordinates are 2D, Z=0.0
+#     spline1.AddPoint(point) # new point to spline is added
+# ShFactory.GSMVisibility(spline1,0) # hide the spline
+
+# # Starting new spline for tip section
+# spline2 = ShFactory.AddNewSpline()
+# spline2.SetSplineType(0)
+# spline2.SetClosing(0)
+
+
+# for i in range(0,len(TipAirfoil)):
+
+#     PT = TipAirfoil[i]
+#     point = ShFactory.AddNewPointCoord(PT[0],PT[1],0.0)
+#     spline2.AddPoint(point)
+# ShFactory.GSMVisibility(spline2,1)
 
 #Scale [REFERENCE POINT ­ RATIO] the root section
 ref1 = part1.CreateReferenceFromObject(spline1)
 
 ref2 = part1.CreateReferenceFromObject(twistPoint1)
 
-scaling1 = ShFactory.AddNewHybridScaling(ref1,ref2, rootLength/100.0) 
+scaling1 = ShFactory.AddNewHybridScaling(ref1,ref2, rootLength/100.0)
 
 scaling1.VolumeResult = False
 
@@ -164,6 +187,46 @@ body2.AppendHybridShape(translate1)
 ###############TIP SECTION#############
 
 
+#Scale [REFERENCE POINT ­ RATIO] the root section
+ref3 = part1.CreateReferenceFromObject(spline1)
+
+ref4 = part1.CreateReferenceFromObject(twistPoint1)
+
+scaling2 = ShFactory.AddNewHybridScaling(ref3,ref4, tipLength/100.0)
+
+scaling2.VolumeResult = False
+
+body3.AppendHybridShape(scaling2)
+
+ShFactory.GSMVisibility(scaling2,0)
+
+
+
+
+
+#Rotate [AXIS] the root section
+rotate2= ShFactory.AddNewEmptyRotate()
+
+ref3= part1.CreateReferenceFromObject(scaling2)
+
+ref4 = part1.CreateReferenceFromObject(twistAxis1)
+
+rotate2.ElemToRotate = ref3
+
+rotate2.VolumeResult = False
+
+rotate2.RotationType = 0
+
+rotate2.Axis = twistAxis1
+
+rotate2.AngleValue = rootTwist
+
+body2.AppendHybridShape(rotate2)
+
+ShFactory.GSMVisibility(rotate2,0)
+
+
+
 
 
 
@@ -172,7 +235,7 @@ body2.AppendHybridShape(translate1)
 
 translate2 = ShFactory.AddNewEmptyTranslate()
 
-translate2.ElemToTranslate = rotate1
+translate2.ElemToTranslate = rotate2
 
 translate2.VectorType = 0
 
@@ -185,11 +248,6 @@ translate2.VolumeResult = False
 translate2.Name = "tipShape" # Naming result "tipShape" IMPORTANT!!!
 
 body3.AppendHybridShape(translate2)
-
-
-
-
-
 
 ######################################
 
@@ -231,4 +289,4 @@ loft1.Name = "masterSurface"
 #Adding loft to Surfaces geometrical set
 body4.AppendHybridShape(loft1)
 
-#part1.Update()
+part1.Update()
