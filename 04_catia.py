@@ -36,9 +36,9 @@ drawingViewGenerativeBehavior1.Document = product1
 
 drawingViewGenerativeBehavior1.DefineFrontView(1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000)
 
-drawingView1.x = 148.500000
+drawingView1.x = 0.000  #148.500000
 
-drawingView1.y = 105.000000
+drawingView1.y = 0.000  #105.000000
 
 drawingView1.Scale = 1.000000
 
