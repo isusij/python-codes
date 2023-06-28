@@ -62,7 +62,7 @@ click_on_img('xy_plane.png', 0.8, 0.5)
 
 # time.sleep(1)
 
-click_on_img('ok_button.png', 0.9, 1)
+click_on_img('ok_button.png', 0.9, 1.2)
 
 # ok_location = pyautogui.locateCenterOnScreen('ok_button.png', confidence=0.9)
 
@@ -86,6 +86,16 @@ click_on_img('ply.png', 0.8, 0.1)
 click_on_img('optimization_ok.png',0.9, 0.5)
 
 click_on_img('aceptar_button_DXF.png', 0.9, 0.1)
+
+#************** ya esta guardado el flttening como archivo DXF, ahora hay que abrirlo en un drawing************
+
+documents2 = CATIA.Documents
+
+ruta_DXF = r"C:\\Users\\Probook\\Desktop\\AERO\\TFG\\python\\patron_laminado\\Plies Group.1_Ply.1_prueba_0.dxf"
+
+drawingDocument2 = documents2.Open(ruta_DXF)
+
+documents2.Update()
 
 
 
