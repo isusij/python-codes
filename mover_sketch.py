@@ -52,7 +52,7 @@ def mover_sketch(ply_number):
 
     selection2 = partDocument1.Selection
 
-    hybridBody7 = hybridBodies1.Item("Flettening_Geometry")
+    hybridBody7 = hybridBodies1.Item("Flattening_Geometry")
 
     selection2.Add(hybridBody7)
 
@@ -100,7 +100,7 @@ geometricalSet1 = part1.HybridBodies
 
 flattenGeometrical = geometricalSet1.Add()
 
-flattenGeometrical.Name = "Flettening_Geometry"
+flattenGeometrical.Name = "Flattening_Geometry"
 
 part1.Update()
 
@@ -108,7 +108,7 @@ part1.Update()
 
 mover_sketch(1)
 
-hybridBody7 = hybridBodies1.Item("Flettening_Geometry")
+hybridBody7 = hybridBodies1.Item("Flattening_Geometry")
 
 part1.InWorkObject = hybridBody7
 
