@@ -9,24 +9,72 @@ print('-----new execution-----')
 
 
 def click_on_img(img, confidence_number,espera):
-
+    """
+    Doble click sobre un icono
+    - Inputs
+        - img [string]: icono a seleccionar .png
+        - confidence_number [long]: porcentaje de similitud que debe encontrar con la imagen
+        - espera [long]: tiempo de espera antes de ejecutar la función
+    - Output
+    """
+    time.sleep(espera)
     img_location = pyautogui.locateCenterOnScreen(img, confidence=confidence_number)
+    print(img_location)
     img_X = img_location[0]
     img_Y = img_location[1]
 
     pyautogui.click(img_X,img_Y)
 
+def doubleClick_on_img(img, confidence_number, espera):
+    """
+    Doble click sobre un icono
+    - Inputs
+        - img [string]: icono a seleccionar .png
+        - confidence_number [long]: porcentaje de similitud que debe encontrar con la imagen
+        - espera [long]: tiempo de espera antes de ejecutar la función
+    - Output
+    """
     time.sleep(espera)
 
-def doubleClick_on_img(img, confidence_number, espera):
-    
     img_location = pyautogui.locateCenterOnScreen(img, confidence=confidence_number)
     img_X = img_location[0]
     img_Y = img_location[1]
 
     pyautogui.doubleClick(img_X,img_Y)
 
-    time.sleep(espera)
+def ply_selection(ply_number):
+    """
+    Seleccionar piel
+    - Inputs
+        - ply_number [int]: numero de la piel a seleccionar
+    - Output
+    """
+    selection = partDocument1.Selection
+    selection.Clear()
+    hybridBodies1 = part1.HybridBodies
+
+    hybridBody1 = hybridBodies1.Item("Stacking")
+
+    hybridBodies2 = hybridBody1.HybridBodies
+
+    hybridBody3 = hybridBodies2.Item("Plies Group.1")
+
+    hybridBodies3 = hybridBody3.HybridBodies
+
+    hybridBody4 = hybridBodies3.Item(f"Sequence.{ply_number}")
+
+    hybridBodies4 = hybridBody4.HybridBodies
+
+    hybridBody5 = hybridBodies4.Item(f"Ply.{ply_number}")
+
+    selection = partDocument1.Selection
+
+    hybridBodies1 = hybridBody1.Parent
+
+    selection.Add(hybridBody5)
+   
+
+
 
 CATIA = win32com.client.Dispatch("CATIA.Application")
 
@@ -34,11 +82,13 @@ partDocument1 = CATIA.ActiveDocument
 
 part1 = partDocument1.Part
 
+ply_selection(2)
+ 
 # click_on_img('producibility.png', 0.9, 0.1)
 
 # click_on_img('ply.png', 0.8, 0.1)
 
-doubleClick_on_img('flattening_icon.png', 0.9, 0.1)
+doubleClick_on_img('flattening_icon.png', 0.9, 0.0)
 
 # flattening_location = pyautogui.locateCenterOnScreen('flattening_icon.png', confidence=0.9)
 
@@ -50,7 +100,25 @@ doubleClick_on_img('flattening_icon.png', 0.9, 0.1)
 
 # pyautogui.doubleClick(flat_X,flat_Y)
 
-click_on_img('xy_plane.png', 0.8, 0.5)
+#**********SEECION DEL PLANO DEL FLATTENING***************************
+
+
+if False:
+    time.sleep(2)
+
+    selection1 = partDocument1.Selection
+    selection1.Clear()
+    originElements1 = part1.OriginElements
+    plane_XY = originElements1.PlaneXY
+    selection1 = partDocument1.Selection
+    selection1.Add(plane_XY)
+
+    selection1.Select() #NO SE QUE FUNCION SIRVE
+
+
+#***********************************************
+
+# click_on_img('xy_plane.png', 0.6, 1)
 
 # xy_plane_location = pyautogui.locateCenterOnScreen('xy_plane.png', confidence=0.8)
 
@@ -62,7 +130,10 @@ click_on_img('xy_plane.png', 0.8, 0.5)
 
 # time.sleep(1)
 
-click_on_img('ok_button.png', 0.9, 1.2)
+click_on_img('ok_button.png', 0.8, 1)
+
+"""
+
 
 # ok_location = pyautogui.locateCenterOnScreen('ok_button.png', confidence=0.9)
 
@@ -71,21 +142,22 @@ click_on_img('ok_button.png', 0.9, 1.2)
 
 # pyautogui.click(ok_X,ok_Y)
 
-# time.sleep(1)
 
-click_on_img('flatten_optimization.png', 0.9, 0.1)
+#mejor no hacer la optimizacion
+# click_on_img('flatten_optimization.png', 0.9, 1.2)  
 
-click_on_img('ply.png', 0.8, 0.1)
+# click_on_img('ply.png', 0.8, 0.5)
 
-click_on_img('optimization_ok.png',0.9, 0.1)
+# click_on_img('optimization_ok.png',0.9, 0.5)
 
-click_on_img('save_asDXF.png',0.9, 0.1)
+click_on_img('save_asDXF.png',0.9, 0.6)
 
-click_on_img('ply.png', 0.8, 0.1)
+# click_on_img('ply.png', 0.8, 0.5)
+ply_selection(1)
 
 click_on_img('optimization_ok.png',0.9, 0.5)
 
-click_on_img('aceptar_button_DXF.png', 0.9, 0.1)
+click_on_img('aceptar_button_DXF.png', 0.9, 1)
 
 #************** ya esta guardado el flttening como archivo DXF, ahora hay que abrirlo en un drawing************
 
@@ -93,10 +165,13 @@ documents2 = CATIA.Documents
 
 ruta_DXF = r"C:\\Users\\Probook\\Desktop\\AERO\\TFG\\python\\patron_laminado\\Plies Group.1_Ply.1_prueba_0.dxf"
 
-drawingDocument2 = documents2.Open(ruta_DXF)
+OpenDocument2 = documents2.Open(ruta_DXF)
 
-documents2.Update()
+time.sleep(2)
 
+drawingDocument2 = CATIA.ActiveDocument
+
+drawingDocument2.Update()
 
 
 #######################################################
@@ -173,3 +248,4 @@ documents2.Update()
 # elemento_objeto.DoClick()
 # tree.SelectNode(elemento_objeto)
 
+"""
