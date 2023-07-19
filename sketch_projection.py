@@ -537,49 +537,49 @@ def line_offset_hztal(y, x1, x2, offset, reference_line, active_sketch):
 
     return line2D1, startPoint, endPoint
 
-def create_drawing(direction_degrees):
-    """"
-    Crea un drawing de la front view del part donde ver el sketch creado anteriormente
-    - Inputs
-        - direction_degrees [string]: nombre de la hoja del drawing, para nombrar la direccion representada
-    - Output
-    """
+# def create_drawing(direction_degrees):
+#     """"
+#     Crea un drawing de la front view del part donde ver el sketch creado anteriormente
+#     - Inputs
+#         - direction_degrees [string]: nombre de la hoja del drawing, para nombrar la direccion representada
+#     - Output
+#     """
 
-    drawingSheets1 = drawingDocument1.Sheets
+#     drawingSheets1 = drawingDocument1.Sheets
 
-    drawingSheet1 = drawingSheets1.Add("New Sheet")
+#     drawingSheet1 = drawingSheets1.Add("New Sheet")
  
-    drawingSheet1.Name = direction_degrees
+#     drawingSheet1.Name = direction_degrees
 
-    drawingSheet1.Activate()
+#     drawingSheet1.Activate()
 
-    drawingSheet1.Scale = 1.0
+#     drawingSheet1.Scale = 1.0
 
-    drawingViews1 = drawingSheet1.Views
+#     drawingViews1 = drawingSheet1.Views
 
-    drawingView1 = drawingViews1.Add("AutomaticNaming")
+#     drawingView1 = drawingViews1.Add("AutomaticNaming")
 
-    drawingViewGenerativeLinks1 = drawingView1.GenerativeLinks
+#     drawingViewGenerativeLinks1 = drawingView1.GenerativeLinks
 
-    drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
+#     drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
 
-    partDocument1 = documents2.Item("flattening.bis.CATPart")
+#     partDocument1 = documents2.Item("flattening.bis.CATPart")
 
-    product1 = partDocument1.GetItem("Rib_M_G")
+#     product1 = partDocument1.GetItem("Rib_M_G")
 
-    drawingViewGenerativeBehavior1.Document = product1
+#     drawingViewGenerativeBehavior1.Document = product1
 
-    drawingViewGenerativeBehavior1.DefineFrontView(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+#     drawingViewGenerativeBehavior1.DefineFrontView(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
-    # drawingView1.x = 105.0
+#     # drawingView1.x = 105.0
 
-    # drawingView1.y = 148.5
+#     # drawingView1.y = 148.5
 
-    drawingView1.Scale = 1.0
+#     drawingView1.Scale = 1.0
 
-    drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
+#     drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
 
-    drawingViewGenerativeBehavior1.Update()
+#     drawingViewGenerativeBehavior1.Update()
 
 def hide_sketch(sketch_name):
     """"
@@ -687,32 +687,66 @@ def delete_line(line_to_hide, active_sketch):
 
     part1.Update()
 
-def get_distance(element1, element2, active_sketch):
+def get_distance(element1, element2):
     """"
     Mide la distancia entre dos elementos 
     - Inputs
-        - element1 [object]: elemento 1
-        - element2 [object]: elemento 2
+        - element1 [object]: elemento de referencia 1
+        - element2 [object]: elemento de referencia 2
         - active_sketch [object]: sketch en el que se encuentran los elementos
     - Output
-        - length1 [long]: distancia entre los dos elementos
+        - length [long]: distancia entre los dos elementos
     """
 
     parameters1 = part1.Parameters
  
-    length1 = parameters1.CreateDimension("", "LENGTH", 0.000000)
+    length = parameters1.CreateDimension("", "LENGTH", 0.000000)
     
     # 'if you want to rename the parameter 
-    length1.Rename("MeasureDistance")
+    length.Rename("MeasureDistance")
     
     relations1 = part1.Relations
  
-    formula1 = relations1.CreateFormula("Formula.2", "", length1, f"distance(`Geometrical Set.1\{active_sketch}\{element1}` ,`Geometrical Set.1\{active_sketch}\{element2}` ) ")
+    formula1 = relations1.CreateFormula("Formula.2", "", length, f"distance(`Geometrical Set.1\{element1}` ,`Geometrical Set.1\{element2}` ) ")
     
     # 'rename the formula 
     formula1.Rename("Distance")
 
-    return length1
+    return length
+
+def sketch_projection(reference_sketch, active_sketch):
+    """
+    Proyecta un sketch en otro nuevo
+    - Inputs
+        - reference_sketch [object]: el sketch que qyueremos copiar
+        - active_sketch [object]: sketch en el que se proyecta
+    - Output
+        - projection [geometric element]: proyeccion del sketch de referencia en el sketch nuevo
+    """
+
+    part1.InWorkObject = active_sketch
+
+    factory2D1 = active_sketch.OpenEdition()
+
+    hybridBodies1 = part1.HybridBodies
+
+    hybridBody1 = hybridBodies1.Item("Geometrical Set.1")   
+
+    hybridSketches1 = hybridBody1.HybridSketches
+
+    ref_sketch = hybridSketches1.Item(reference_sketch)
+
+    reference1 = part1.CreateReferenceFromObject(ref_sketch)
+
+    Projection = factory2D1.CreateProjections(reference1)
+
+    active_sketch.CloseEdition()
+
+    part1.InWorkObject = hybridBody1
+
+    part1.Update()
+
+    return Projection
 
 def paint_lines_45(x1, y1, x2, y2, line_name, active_sketch):
     """
@@ -784,6 +818,114 @@ def paint_lines_45(x1, y1, x2, y2, line_name, active_sketch):
 
     return startPoint, endPoint, line2D1
 
+def points_to_measure(point1, point2):
+    """
+     Crea dos puntos en el geometrical set equivalentes a los vertices del sketch "cantidad material" para medir la pieza
+    - Inputs
+        - point1 [geometry]: punto de referencia 1
+        - point2 [geometry]: punto de referencia 2
+    - Output
+    """
+
+    partDocument1 = CATIA.ActiveDocument
+    part1 = partDocument1.Part
+    hybridBodies1 = part1.HybridBodies
+    hybridBody1 = hybridBodies1.Item("Geometrical Set.1")
+    part1.InWorkObject = hybridBody1
+
+    hybridShapeFactory1 = part1.HybridShapeFactory
+
+    hybridShapePointCoord1 = hybridShapeFactory1.AddNewPointCoord(0.000000, 0.000000, 0.000000)
+    hybridShapePointCoord1.Name = "punto1"
+
+    pt1 = sketch1.GeometricElements.Item(point1)
+    # reference1 = part1.CreateReferenceFromBRepName("WireFVertex:(Vertex:(Neighbours:(Face:(Brp:(Sketch.11;1);None:();Cf11:());Face:(Brp:(Sketch.11;7);None:();Cf11:()));Cf11:());WithPermanentBody;WithoutBuildError;WithSelectingFeatureSupport;MFBRepVersion_CXR15)", sketch1)
+    reference1 = part1.CreateReferenceFromObject(pt1)
+
+    hybridShapePointCoord1.PtRef = reference1
+
+    axisSystems1 = part1.AxisSystems
+
+    axisSystem1 = axisSystems1.Item("Axis System.1")
+
+    reference2 = part1.CreateReferenceFromObject(axisSystem1)
+
+    hybridShapePointCoord1.RefAxisSystem = reference2
+
+    hybridBody1.AppendHybridShape(hybridShapePointCoord1)
+
+    part1.InWorkObject = hybridShapePointCoord1
+
+    # part1.Update()
+
+    hybridShapePointCoord2 = hybridShapeFactory1.AddNewPointCoord(0.000000, 0.000000, 0.000000)
+    hybridShapePointCoord2.Name = "punto2"
+
+    pt2 = sketch1.geometricElements.Item(point2)
+    reference3 = part1.CreateReferenceFromBRepName("WireFVertex:(Vertex:(Neighbours:(Face:(Brp:(Sketch.11;1);None:();Cf11:());Face:(Brp:(Sketch.11;10);None:();Cf11:()));Cf11:());WithPermanentBody;WithoutBuildError;WithSelectingFeatureSupport;MFBRepVersion_CXR15)", sketch1)
+    reference3 = part1.CreateReferenceFromObject(pt2)
+
+    hybridShapePointCoord2.PtRef = reference3
+
+    reference4 = part1.CreateReferenceFromObject(axisSystem1)
+
+    hybridShapePointCoord2.RefAxisSystem = reference4
+
+    hybridBody1.AppendHybridShape(hybridShapePointCoord2)
+
+    part1.InWorkObject = hybridShapePointCoord2
+
+    part1.InWorkObject = hybridBody1
+
+    part1.Update()
+
+    return hybridShapePointCoord1, hybridShapePointCoord2
+
+
+
+
+#*******CONTAR ELEMENTOS Y HACER BUCLE******************
+
+# # Active document
+
+# partDocument1 = CATIA.ActiveDocument
+
+# part1 = partDocument1.Part
+
+ 
+
+# # Access to Plies Group tiems
+
+# partHBs = part1.HybridBodies
+
+# stackHB = partHBs.Item("Stacking")
+
+# stackHBs = stackHB.HybridBodies
+
+# pliesHB = stackHBs.Item("Plies Group.1")
+
+# pliesHBs = pliesHB.HybridBodies
+
+# sequence = pliesHBs.Item(f"Sequence.{1}")
+
+ 
+
+# for s in range(1, pliesHBs.Count+1):
+
+ 
+
+#     sequence = pliesHBs.Item(s)
+
+   
+
+#     # Funcion que saca el material
+
+#         # Funcion que proyectra skech
+
+#         # Funcion
+
+
+# main_function()
 
 
 #********CREAR UN NUEVO SKETCH EN EL PLANO XY********
@@ -864,15 +1006,23 @@ vertex310 = point_coincidence(endPoint_10dcha, endPoint_10inf, sketch1)
 
 vertex410 = point_coincidence(endPoint_10izq, startPoint_10inf, sketch1)
 
+# TAMAÑO DE LA CAPA PARA MEDIR CINTA
+
+pt1, pt2 = points_to_measure("Point.1", "Point.2")
+
+get_distance(pt1, pt2)
+
+
+"""""
 #*************METER EL SKETCH EN UN DRAWING************************
 
-documents2 = CATIA.Documents
+# documents2 = CATIA.Documents
 
-drawingDocument1 = documents2.Add("Drawing")
+# drawingDocument1 = documents2.Add("Drawing")
 
-create_drawing("cantidad_material")
+# create_drawing("cantidad_material")
 
-partDocument1.Activate()
+# partDocument1.Activate()
 
 #*********ENTRE CADA DRAWING OCULTAMOS LO QUE YA HEMOS SACADO*********
 
@@ -896,7 +1046,7 @@ linea2_v, _, _ = line_offset_vertical(0.0, 200.0, -200.0, 150.0, linea1_v, sketc
 
 delete_line("limite_izq", sketch2)
 
-create_drawing("direccion_0")
+# create_drawing("direccion_0")
 
 hide_sketch(sketch2)
 
@@ -918,7 +1068,7 @@ linea3_h, _, _ = line_offset_hztal(-100.0, 100.0, -100.0, 150.0, linea2_h, sketc
 
 delete_line("lim_superior", sketch3)
 
-create_drawing("direccion_90")
+# create_drawing("direccion_90")
 
 hide_sketch(sketch3)
 
@@ -928,6 +1078,39 @@ partDocument1.Activate()
 
 sketch4 = create_sketch("flatten_geometry_+45")
 
+# sketch_projection("cantidad_material", sketch4)
+
+
+
 geometricElements1 = flatten_projection(1, sketch4)
 
-startPoint_45, endPoint_45, line45 = paint_lines_45(-100.0, -300.0, 200.0, 100.0, "lim_45", sketch4)
+linea_10izq, startPoint_10izq, endPoint_10izq = limits_vertical(-500.0, 200.0, -200.0, 10, sketch4)
+
+linea_10dcha, startPoint_10dcha, endPoint_10dcha = limits_vertical(500.0, 200.0, -200.0, 10, sketch4)
+
+linea_10sup, startPoint_10sup, endPoint_10sup = limits_hztal(500.0, 100.0, -100.0, 10, sketch4)
+
+linea_10inf, startPoint_10inf, endPoint_10inf = limits_hztal(-500.0, 100.0, -100.0, 10, sketch4)
+
+vertex110 = point_coincidence(startPoint_10izq, startPoint_10sup, sketch4)
+
+vertex210 = point_coincidence(startPoint_10dcha, endPoint_10sup, sketch4)
+
+vertex310 = point_coincidence(endPoint_10dcha, endPoint_10inf, sketch4)
+
+vertex410 = point_coincidence(endPoint_10izq, startPoint_10inf, sketch4)
+
+
+
+# startPoint_45, endPoint_45, line45 = paint_lines_45(-100.0, -300.0, 200.0, 100.0, "lim_45", sketch4)
+
+
+# width = get_distance(vertex110.Name, vertex210.Name, sketch1)
+
+pt1, pt2 = points_to_measure("Point.1", "Point.2")
+
+get_distance(pt1, pt2)
+
+hide_sketch(sketch1)
+
+"""
