@@ -130,7 +130,7 @@ def cinta_UD(ply_number):
         - projection [geometric element]: proyeccion del flattening en el sketch
     """ 
 
-    def flatten_projection(active_sketch, numero_ply):
+    def flatten_projection():
         """
         Saca la proyeccion del flattening de una capa en un sketch a parte
         - Inputs
@@ -139,17 +139,17 @@ def cinta_UD(ply_number):
             - projection [geometric element]: proyeccion del flattening en el sketch
         """
 
-        part1.InWorkObject = active_sketch
+        part1.InWorkObject = sketch
 
-        factory2D1 = active_sketch.OpenEdition()
+        factory2D1 = sketch.OpenEdition()
 
         pliesHBs = pliesHB.HybridBodies
 
-        sequenceHB = pliesHBs.Item(f"Sequence.{numero_ply}")
+        sequenceHB = pliesHBs.Item(f"Sequence.{ply_number}")
 
         sequenceHBs = sequenceHB.HybridBodies
 
-        plyHB = sequenceHBs.Item(f"Ply.{numero_ply}")
+        plyHB = sequenceHBs.Item(f"Ply.{ply_number}")
 
         plyHBs = plyHB.HybridBodies
 
@@ -167,7 +167,7 @@ def cinta_UD(ply_number):
 
         Projection = factory2D1.CreateProjections(reference1)
 
-        active_sketch.CloseEdition()
+        sketch.CloseEdition()
 
         part1.InWorkObject = flattGeoSet
 
@@ -364,10 +364,201 @@ def cinta_UD(ply_number):
 
         return length
 
+    def first_line_UD(x, y1, y2, active_sketch):
+        """
+        Dibuja la primera linea de cinta
+        - Inputs
+            - x [float]: coordenada x de la linea a dibujar
+            - y1 [float]: coordenada y del punto 1
+            - y2 [float]: coordenada y del punto 2
+            - active_sketch [object]: sketch en el que se dibuja la linea
+        - Output  
+            - line2D1 [geometric element]: la linea creada
+        """
+
+        part1.InWorkObject = active_sketch
+
+        factory2D1 = active_sketch.OpenEdition()
+
+        startPoint = factory2D1.CreatePoint(x, y1)
+
+        endPoint = factory2D1.CreatePoint(x, y2)
+
+        line2D1 = factory2D1.CreateLine(x, y1, x, y2)
+
+        line2D1.StartPoint = startPoint
+
+        line2D1.EndPoint = endPoint
+
+        line2D1.Name = "first"
+
+        constraints1 = active_sketch.Constraints
+
+        geometricElements = active_sketch.GeometricElements
+
+        reference1 = part1.CreateReferenceFromObject(line2D1)
+
+        axis2D1 = geometricElements.Item("AbsoluteAxis")
+
+        line2D2 = axis2D1.GetItem("VDirection")
+
+        reference2 = part1.CreateReferenceFromObject(line2D2)
+
+        constraint1 = constraints1.AddBiEltCst(13, reference1, reference2)  #catCstTypeVerticality
+
+        constraint1.Mode = 0    #catCstModeDrivingDimension
+
+        reference3 = part1.CreateReferenceFromObject(linea_10izq)
+
+        constraint4 = constraints1.AddBiEltCst(1, reference1, reference3)   #catCstTypeDistance
+
+        constraint4.Mode = 0    #catCstModeDrivingDimension
+
+        length1 = constraint4.Dimension
+
+        length1.Value = 0.0
+
+        active_sketch.CloseEdition()
+
+        part1.InWorkObject = flattGeoSet
+
+        part1.Update()
+
+        return line2D1
+
+    def lines_UD(x, y1, y2, active_sketch):
+        """
+        Dibuja una linea vertical a una distancia de otra dada
+        - Inputs
+            - x [float]: coordenada x de la linea a dibujar
+            - y1 [float]: coordenada y del punto 1
+            - y2 [float]: coordenada y del punto 2
+            - active_sketch [object]: sketch en el que se dibuja la linea
+        - Output  
+            - line2D1 [geometric element]: la linea creada
+        """
+
+        part1.InWorkObject = active_sketch
+
+        factory2D1 = active_sketch.OpenEdition()
+
+        startPoint = factory2D1.CreatePoint(x, y1)
+
+        endPoint = factory2D1.CreatePoint(x, y2)
+
+        line2D1 = factory2D1.CreateLine(x, y1, x, y2)
+
+        line2D1.StartPoint = startPoint
+
+        line2D1.EndPoint = endPoint
+
+        constraints1 = active_sketch.Constraints
+
+        geometricElements = active_sketch.GeometricElements
+
+        reference1 = part1.CreateReferenceFromObject(line2D1)
+
+        axis2D1 = geometricElements.Item("AbsoluteAxis")
+
+        line2D2 = axis2D1.GetItem("VDirection")
+
+        reference2 = part1.CreateReferenceFromObject(line2D2)
+
+        constraint1 = constraints1.AddBiEltCst(13, reference1, reference2)  #catCstTypeVerticality
+
+        constraint1.Mode = 0    #catCstModeDrivingDimension
+
+        reference3 = part1.CreateReferenceFromObject(linea)
+
+        constraint4 = constraints1.AddBiEltCst(1, reference1, reference3)   #catCstTypeDistance
+
+        constraint4.Mode = 0    #catCstModeDrivingDimension
+
+        length1 = constraint4.Dimension
+
+        length1.Value = 150.0
+
+        active_sketch.CloseEdition()
+
+        part1.InWorkObject = flattGeoSet
+
+        part1.Update()
+
+        return line2D1
+
+    def hide_sketch():
+        """"
+        Oculta el sketch seleccionado
+        - Inputs
+            - sketch_name [object]: sketch a ocultar
+        - Output
+        """
+
+        selection1 = partDocument1.Selection
+
+        visPropertySet1 = selection1.VisProperties
+
+        selection1.Add(sketch)     
+
+        visPropertySet1.SetShow(1)
+
+        selection1.Clear()
+
+        part1.Update()
+
+    def create_drawing():
+        """"
+        Crea un drawing del patron de corte ya diseñado
+        - Inputs
+            - direction_degrees [string]: nombre de la hoja del drawing, para nombrar la direccion representada
+        - Output
+        """
+
+        drawingSheets1 = drawingDocument1.Sheets
+
+        drawingSheet1 = drawingSheets1.Add("New Sheet")
+    
+        drawingSheet1.Name = f"ply{ply_number}"
+
+        drawingSheet1.Activate()
+
+        drawingSheet1.Scale = 1.0
+
+        drawingViews1 = drawingSheet1.Views
+
+        drawingView1 = drawingViews1.Add("AutomaticNaming")
+
+        drawingViewGenerativeLinks1 = drawingView1.GenerativeLinks
+
+        drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
+
+        partDoc = documents2.Item(f"{partDocument1.Name}")
+
+        product1 = partDoc.GetItem(f"{part1.Name}")
+
+        drawingViewGenerativeBehavior1.Document = product1
+
+        drawingViewGenerativeBehavior1.DefineFrontView(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+
+        # drawingView1.x = 105.0
+
+        # drawingView1.y = 148.5
+
+        drawingView1.Scale = 1.0
+
+        drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
+
+        drawingViewGenerativeBehavior1.Update()
+
+        partDocument1.Activate()
+
+
+
+
 
     sketch = create_sketch(f"sketch{ply_number}")
 
-    projection = flatten_projection(sketch, ply_number)
+    projection = flatten_projection()
 
     linea_10izq, startPoint_10izq, endPoint_10izq = limits_vertical(-5000.0, 5000.0, -5000.0, 10, sketch, "lim_izq")
 
@@ -393,11 +584,30 @@ def cinta_UD(ply_number):
 
     print(num_tape)
 
+    width = measure(linea_10dcha)
+
+    linea = first_line_UD(5000.0, width/2 + 50, -(width/2 + 50), sketch)
+
+    lines_drawn = 0
+
+    while lines_drawn < num_tape:
+
+        linea = lines_UD(5000.0, width/2 + 50, -(width/2 + 50), sketch)
+
+        lines_drawn = lines_drawn + 1
+
+    create_drawing()
+
+    hide_sketch()
+        
+    
+
+
 
 
 #*************FLATTENING DE TODAS LAS CAPAS QUE TENGA LA PIEZA******************
 
-# Access to Plies Group tiems
+# Access to Plies Group items
 
 partDocument1 = CATIA.ActiveDocument
 
@@ -413,34 +623,53 @@ pliesHB = stackHBs.Item("Plies Group.1")
 
 pliesHBs = pliesHB.HybridBodies
 
-# # sequence = pliesHBs.Item(f"Sequence.{1}")
+# Contar el numero de capas que tiene la pieza
 
-# # Contar el numero de capas que tiene la pieza
+ply_count = 0
 
-# for s in range(1, pliesHBs.Count + 1):
+for s in range(1, pliesHBs.Count + 1):
 
-#     sequence = pliesHBs.Item(s)
+    sequence = pliesHBs.Item(s)
 
-#     print(sequence.Name)    #devuelve sequence.1, sequence.2 ...
+    print(sequence.Name)    #devuelve sequence.1, sequence.2 ...
    
-#     print(sequence)
+    print(sequence)
     
+    # while s < ply_count:
 
-#     if s==5:
-#         break       #no hace na
-#     else:
-#         flattening(s)
+    flattening(s)
+
+        # ply_count = ply_count + 1
 
 
-# print("bucle terminado con exito")
 
-#*********OCULTAR STACKING (no hace falta que sea visible para trabajar con el)**********
+print("bucle terminado con exito")
+
+#*********OCULTAR TODO LO QUE NO ES NECESARIO **********
 
 selection1 = partDocument1.Selection
 
 visPropertySet1 = selection1.VisProperties
 
-selection1.Add(stackHB)     #PARA SELECCIONAR ALGO    hybridBody2=stacking
+selection1.Add(stackHB)     #STACKING
+
+visPropertySet1.SetShow(1)
+
+selection1.Clear()
+
+bodies1 = part1.Bodies
+
+partBodyHB = bodies1.Item("PartBody")    #PART BODY 
+
+selection1.Add(partBodyHB)     
+
+visPropertySet1.SetShow(1)
+
+selection1.Clear()
+
+geometricalSetHB = partHBs.Item("Geometrical Set.1")  #GEOMETRICAL SET
+
+selection1.Add(geometricalSetHB)     
 
 visPropertySet1.SetShow(1)
 
@@ -457,6 +686,14 @@ part1.InWorkObject = flattGeoSet
 
 part1.Update()
 
+# *********CREAR UN DRAWING DONDE SE IRAN GUARDANDO LOS PATRONES DE CORTE**********
+
+documents2 = CATIA.Documents
+
+drawingDocument1 = documents2.Add("Drawing")
+
+partDocument1.Activate()
+
 # ************CREAR EL SKETCH DE CANTIDAD MATERIAL********************
 
 for s in range(1, pliesHBs.Count + 1):
@@ -469,34 +706,4 @@ for s in range(1, pliesHBs.Count + 1):
     # Funcion que saca el material
     cinta_UD(s)
 
-# #********CREAR UN NUEVO SKETCH EN EL PLANO XY********
-
-# partDocument1 = CATIA.ActiveDocument
-
-# part1 = partDocument1.Part
-
-# hybridBodies1 = part1.HybridBodies
-
-# flattGeoSet = hybridBodies1.Item("Flattening_Geometry")   
-
-# part1.InWorkObject = flattGeoSet
-
-# # sketch1 = create_sketch("cantidad_material")
-
-
-# #*********PROYECCION DEL FLATTENING EN SKETCH**********
-
-
-# for s in range(1, pliesHBs.Count + 1):
-
-#     sequence = pliesHBs.Item(s)
-
-#     print(sequence.Name)    #devuelve sequence.1, sequence.2 ...
-   
-
-# #     # Funcion que saca el material
-#     cinta_UD(s)
-
-
-
-# # main_function()
+drawingDocument1.Activate()
