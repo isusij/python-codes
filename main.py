@@ -1,9 +1,10 @@
 import win32com.client.dynamic # Module for COM­Client
 import sys, os   # Module for File­Handling
-import win32gui # Module for MessageBox
+import pandas as pd    #Module for creating data frames
 import numpy as np 
 import pyautogui
 import time
+from openpyxl import Workbook
 
 print('-----new execution-----')
 
@@ -19,16 +20,17 @@ def flattening(numero_capa):
     
     def click_on_img(img, confidence_number,espera):
         """
-        Doble click sobre un icono
+        Hace click sobre un icono
         - Inputs
-            - img [string]: icono a seleccionar .png
+            - img [string]: icono a seleccionar guardado como archivo .png
             - confidence_number [long]: porcentaje de similitud que debe encontrar con la imagen
             - espera [long]: tiempo de espera antes de ejecutar la función
         - Output
         """
         time.sleep(espera)
+
         img_location = pyautogui.locateCenterOnScreen(img, confidence=confidence_number)
-        print(img_location)
+        # print(img_location)
         img_X = img_location[0]
         img_Y = img_location[1]
 
@@ -36,9 +38,9 @@ def flattening(numero_capa):
 
     def doubleClick_on_img(img, confidence_number, espera):
         """
-        Doble click sobre un icono
+        Hace doble click sobre un icono
         - Inputs
-            - img [string]: icono a seleccionar .png
+            - img [string]: icono a seleccionar guardado como archivo .png
             - confidence_number [long]: porcentaje de similitud que debe encontrar con la imagen
             - espera [long]: tiempo de espera antes de ejecutar la función
         - Output
@@ -53,32 +55,31 @@ def flattening(numero_capa):
 
     def ply_selection(ply_number):
         """
-        Seleccionar piel
+        Seleccionar piel para operar con ella
         - Inputs
             - ply_number [int]: numero de la piel a seleccionar
         - Output
         """
         selection = partDocument1.Selection
         selection.Clear()
-        hybridBodies1 = part1.HybridBodies
 
-        hybridBody1 = hybridBodies1.Item("Stacking")
+        partHBs = part1.HybridBodies
 
-        hybridBodies2 = hybridBody1.HybridBodies
+        stackHB = partHBs.Item("Stacking")
 
-        hybridBody3 = hybridBodies2.Item("Plies Group.1")
+        stackHBs = stackHB.HybridBodies
 
-        hybridBodies3 = hybridBody3.HybridBodies
+        pliesHB = stackHBs.Item("Plies Group.1")
 
-        hybridBody4 = hybridBodies3.Item(f"Sequence.{ply_number}")
+        pliesHBs = pliesHB.HybridBodies
 
-        hybridBodies4 = hybridBody4.HybridBodies
+        sequenceHB = pliesHBs.Item(f"Sequence.{ply_number}")
 
-        plyHB = hybridBodies4.Item(f"Ply.{ply_number}")
+        sequenceHBs = sequenceHB.HybridBodies
+
+        plyHB = sequenceHBs.Item(f"Ply.{ply_number}")
 
         selection = partDocument1.Selection
-
-        hybridBodies1 = hybridBody1.Parent
 
         selection.Add(plyHB)
 
@@ -94,11 +95,20 @@ def flattening(numero_capa):
 
     part1.Update()
 
-def create_sketch(sketch_name):
+def cinta_UD(ply_number):
+    """
+    Saca los patrones de corte de cinta unidireccional de la pieza
+    - Inputs
+        - ply_number [int]: capa de la que se va a sacar el patron de corte
+    - Output
+        - projection [geometric element]: proyeccion del flattening en el sketch
+    """ 
+
+    def create_sketch(sketch_name):
         """"
         Crea un nuevo sketch en el plano xy
         - Inputs
-            - sketch_name [string]: nombre del nuevo sketch
+            - sketch_name [string]: nombre del nuevo sketch que queremos crear
         - Output
             - new_sketch [geometric element]: sketch resultante
         """
@@ -121,22 +131,12 @@ def create_sketch(sketch_name):
 
         return new_sketch
 
-def cinta_UD(ply_number):
-    """
-    Saca los patrones de corte de cinta unidireccional de la pieza
-    - Inputs
-        - ply_number [int]: capa de la que se va a sacar el patron de corte
-    - Output
-        - projection [geometric element]: proyeccion del flattening en el sketch
-    """ 
-
     def flatten_projection():
         """
         Saca la proyeccion del flattening de una capa en un sketch a parte
         - Inputs
-            - active_sketch [object]: sketch en el que se trabaja
         - Output
-            - projection [geometric element]: proyeccion del flattening en el sketch
+            - projection [geometric element]: proyeccion del flattening en un sketch
         """
 
         part1.InWorkObject = sketch
@@ -364,13 +364,13 @@ def cinta_UD(ply_number):
 
         return length
 
-    def first_line_UD(x, y1, y2, active_sketch):
+    def first_line_UD(y, x1, x2, active_sketch):
         """
         Dibuja la primera linea de cinta
         - Inputs
-            - x [float]: coordenada x de la linea a dibujar
-            - y1 [float]: coordenada y del punto 1
-            - y2 [float]: coordenada y del punto 2
+            - y [float]: coordenada y de la linea a dibujar
+            - x1 [float]: coordenada x del punto 1
+            - x2 [float]: coordenada x del punto 2
             - active_sketch [object]: sketch en el que se dibuja la linea
         - Output  
             - line2D1 [geometric element]: la linea creada
@@ -380,11 +380,11 @@ def cinta_UD(ply_number):
 
         factory2D1 = active_sketch.OpenEdition()
 
-        startPoint = factory2D1.CreatePoint(x, y1)
+        startPoint = factory2D1.CreatePoint(x1, y)
 
-        endPoint = factory2D1.CreatePoint(x, y2)
+        endPoint = factory2D1.CreatePoint(x2, y)
 
-        line2D1 = factory2D1.CreateLine(x, y1, x, y2)
+        line2D1 = factory2D1.CreateLine(x1, y, x2, y)
 
         line2D1.StartPoint = startPoint
 
@@ -400,15 +400,15 @@ def cinta_UD(ply_number):
 
         axis2D1 = geometricElements.Item("AbsoluteAxis")
 
-        line2D2 = axis2D1.GetItem("VDirection")
+        line2D2 = axis2D1.GetItem("HDirection")
 
         reference2 = part1.CreateReferenceFromObject(line2D2)
 
-        constraint1 = constraints1.AddBiEltCst(13, reference1, reference2)  #catCstTypeVerticality
+        constraint1 = constraints1.AddBiEltCst(10, reference1, reference2)  #catCstTypeHorizontality
 
         constraint1.Mode = 0    #catCstModeDrivingDimension
 
-        reference3 = part1.CreateReferenceFromObject(linea_10izq)
+        reference3 = part1.CreateReferenceFromObject(linea_10inf)
 
         constraint4 = constraints1.AddBiEltCst(1, reference1, reference3)   #catCstTypeDistance
 
@@ -426,13 +426,13 @@ def cinta_UD(ply_number):
 
         return line2D1
 
-    def lines_UD(x, y1, y2, active_sketch):
+    def lines_UD(y, x1, x2, active_sketch):
         """
         Dibuja una linea vertical a una distancia de otra dada
         - Inputs
-            - x [float]: coordenada x de la linea a dibujar
-            - y1 [float]: coordenada y del punto 1
-            - y2 [float]: coordenada y del punto 2
+            - y [float]: coordenada y de la linea a dibujar
+            - x1 [float]: coordenada x del punto 1
+            - x2 [float]: coordenada x del punto 2
             - active_sketch [object]: sketch en el que se dibuja la linea
         - Output  
             - line2D1 [geometric element]: la linea creada
@@ -442,11 +442,11 @@ def cinta_UD(ply_number):
 
         factory2D1 = active_sketch.OpenEdition()
 
-        startPoint = factory2D1.CreatePoint(x, y1)
+        startPoint = factory2D1.CreatePoint(x1, y)
 
-        endPoint = factory2D1.CreatePoint(x, y2)
+        endPoint = factory2D1.CreatePoint(x2, y)
 
-        line2D1 = factory2D1.CreateLine(x, y1, x, y2)
+        line2D1 = factory2D1.CreateLine(x1, y, x2, y)
 
         line2D1.StartPoint = startPoint
 
@@ -460,11 +460,11 @@ def cinta_UD(ply_number):
 
         axis2D1 = geometricElements.Item("AbsoluteAxis")
 
-        line2D2 = axis2D1.GetItem("VDirection")
+        line2D2 = axis2D1.GetItem("HDirection")
 
         reference2 = part1.CreateReferenceFromObject(line2D2)
 
-        constraint1 = constraints1.AddBiEltCst(13, reference1, reference2)  #catCstTypeVerticality
+        constraint1 = constraints1.AddBiEltCst(10, reference1, reference2)  #catCstTypeHorizontality
 
         constraint1.Mode = 0    #catCstModeDrivingDimension
 
@@ -553,9 +553,6 @@ def cinta_UD(ply_number):
         partDocument1.Activate()
 
 
-
-
-
     sketch = create_sketch(f"sketch{ply_number}")
 
     projection = flatten_projection()
@@ -576,15 +573,21 @@ def cinta_UD(ply_number):
 
     vertex410 = point_coincidence(endPoint_10izq, startPoint_10inf, sketch)
 
-    length = measure(linea_10sup)
+    length = measure(linea_10dcha)
 
     division = length/150
 
     num_tape = int(np.ceil(division))
+    cortes.append(num_tape)
+    print(f"numero de cortes de la capa {s} = {num_tape}")
 
-    print(num_tape)
+    width = measure(linea_10sup)
+    long_trozo.append(width)
+    print(f"ancho de la cinta {s} = {width}")
 
-    width = measure(linea_10dcha)
+    total_tape = num_tape * width
+    long_tot.append(total_tape)
+    print(f"longitud total necesaria para la capa {s} = {total_tape}")
 
     linea = first_line_UD(5000.0, width/2 + 50, -(width/2 + 50), sketch)
 
@@ -600,10 +603,12 @@ def cinta_UD(ply_number):
 
     hide_sketch()
         
-    
+# ******CREAMOS LAS LISTAS DE LOS DATOS OBJETIVO DEL CODIGO**********
+#       se almacenara un valor en cada lista por cada capa
 
-
-
+long_tot = []
+cortes = []
+long_trozo = []
 
 #*************FLATTENING DE TODAS LAS CAPAS QUE TENGA LA PIEZA******************
 
@@ -631,19 +636,17 @@ for s in range(1, pliesHBs.Count + 1):
 
     sequence = pliesHBs.Item(s)
 
-    print(sequence.Name)    #devuelve sequence.1, sequence.2 ...
+    # print(sequence.Name)    #devuelve sequence.1, sequence.2 ...
    
-    print(sequence)
-    
-    # while s < ply_count:
+    # print(sequence)
+
+    print(f"-- creando flattening de la capa {s}...")
 
     flattening(s)
 
-        # ply_count = ply_count + 1
 
 
-
-print("bucle terminado con exito")
+print("flattenings terminados con exito")
 
 #*********OCULTAR TODO LO QUE NO ES NECESARIO **********
 
@@ -676,7 +679,7 @@ visPropertySet1.SetShow(1)
 selection1.Clear()
 
 
-#****************CREAR UN GEOMETRICAL SET ESPECIAL PARA EL PROCESO**************
+#****************CREAR UN GEOMETRICAL SET ESPECIAL QUE CONTENGA LOS RESULTADOS**************
 
 flattGeoSet = partHBs.Add()
 
@@ -694,16 +697,60 @@ drawingDocument1 = documents2.Add("Drawing")
 
 partDocument1.Activate()
 
-# ************CREAR EL SKETCH DE CANTIDAD MATERIAL********************
+# ************CREAR LOS SKETCH CON LOS PATRONES DE CORTE Y PASARLO A UN DRAWING********************
+
+
 
 for s in range(1, pliesHBs.Count + 1):
 
     sequence = pliesHBs.Item(s)
 
-    print(sequence.Name)    #devuelve sequence.1, sequence.2 ...
+    # print(sequence.Name)    #devuelve sequence.1, sequence.2 ...
    
-
     # Funcion que saca el material
+
+    print(f"--sacando patrones de corte de la capa {s}...")
+
     cinta_UD(s)
 
+print("--Cantidad de material obtenida correctamente")
+
+# ********DEJAMOS ACTIVA LA VISTA DEL DRAWING PARA FINALIZAR***********
+
 drawingDocument1.Activate()
+
+# *******CREAMOS TABLAS CON LOS DATOS OBTENIDOS************
+
+data = {'Longitud total': long_tot,
+        'numero de cortes': cortes,
+        'longitud trozo': long_trozo
+        }
+
+
+total_long = sum(long_tot)
+print("longitud total de la pieza = ", total_long)
+
+total_cuts = sum(cortes)
+print("numero total de cortes necesarios = ", total_cuts)
+
+final_row = [total_long, total_cuts, '--']
+
+df = pd.DataFrame(data)
+
+df.index = np.arange(1, len(df)+1)
+
+df.loc[len(df)+1] = final_row
+
+last_row = len(df)
+print("variable last row = ", last_row)
+
+df.rename(index={last_row : 'Total pieza'},inplace=True)
+
+# df = df.append(final_row)
+# Print the output.
+print(df)
+
+excel_document = df.to_excel("patrones_corte.xlsx")
+
+wb = Workbook("patrones_corte.xlsx")
+
