@@ -284,6 +284,7 @@ def main(CAD_file):
             part1.InWorkObject = sketch
             sketch.OpenEdition()
 
+            # Se impone la condicion de que los puntos coincidan
             constraints1 = sketch.Constraints
             reference1 = part1.CreateReferenceFromObject(point1)
             reference2 = part1.CreateReferenceFromObject(point2)
@@ -401,6 +402,35 @@ def main(CAD_file):
 
             return line2D1
 
+        def create_drawing():
+            """"
+            Crea una hoja de drawing del patron de corte ya trazado
+            - Inputs
+            - Output
+            """
+
+            # Se crea una nueva hoja dentro del Drawing
+            drawingSheets1 = drawingDocument1.Sheets
+            drawingSheet1 = drawingSheets1.Add("New Sheet")
+            drawingSheet1.Name = f"ply{ply_number}"
+            drawingSheet1.Activate()
+            drawingSheet1.Scale = 1.0
+            drawingViews1 = drawingSheet1.Views
+            drawingView1 = drawingViews1.Add("AutomaticNaming")
+
+            # Se obtiene la vista frontal de los patrones dibujados
+            partDoc = documents2.Item(f"{partDocument1.Name}")
+            product1 = partDoc.GetItem(f"{part1.Name}")
+            drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
+            drawingViewGenerativeBehavior1.Document = product1
+            drawingViewGenerativeBehavior1.DefineFrontView(1.0, 0.0, 0.0, 0.0, 1.0, 0.0) #se escoge la vista XY
+            drawingView1.Scale = 1.0
+            drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
+
+            drawingViewGenerativeBehavior1.Update()
+
+            partDocument1.Activate()
+
         def hide_sketch():
             """"
             Oculta el sketch seleccionado
@@ -415,36 +445,6 @@ def main(CAD_file):
             selection1.Clear()
 
             part1.Update()
-
-        def create_drawing():
-            """"
-            Crea un drawing del patron de corte ya diseñado
-            - Inputs
-            - Output
-            """
-
-            # Se crea una nueva hoja dentro del Drawing
-            drawingSheets1 = drawingDocument1.Sheets
-            drawingSheet1 = drawingSheets1.Add("New Sheet")
-            drawingSheet1.Name = f"ply{ply_number}"
-            drawingSheet1.Activate()
-            drawingSheet1.Scale = 1.0
-            drawingViews1 = drawingSheet1.Views
-            drawingView1 = drawingViews1.Add("AutomaticNaming")
-            drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
-
-            # Se obtiene la vista frontal de los patrones dibujados
-            partDoc = documents2.Item(f"{partDocument1.Name}")
-            product1 = partDoc.GetItem(f"{part1.Name}")
-            drawingViewGenerativeBehavior1.Document = product1
-            drawingViewGenerativeBehavior1.DefineFrontView(1.0, 0.0, 0.0, 0.0, 1.0, 0.0) #se escoge la vista XY
-            drawingView1.Scale = 1.0
-            drawingViewGenerativeBehavior1 = drawingView1.GenerativeBehavior
-
-            drawingViewGenerativeBehavior1.Update()
-
-            partDocument1.Activate()
-
 
         sketch = create_sketch(f"sketch{ply_number}")
 
@@ -493,14 +493,14 @@ def main(CAD_file):
         hide_sketch()
             
 
-    # ******CREAMOS LAS LISTAS DE LOS DATOS OBJETIVO DEL CODIGO**********
+    # ****** CREAMOS LAS LISTAS DE LOS DATOS OBJETIVO DEL CODIGO **********
     #       se almacenara un valor en cada lista por cada capa
 
     long_tot = []
     cortes = []
     long_trozo = []
 
-    #*************FLATTENING DE TODAS LAS CAPAS QUE TENGA LA PIEZA******************
+    #************* FLATTENING DE TODAS LAS CAPAS QUE TENGA LA PIEZA ******************
 
     # Access to Plies Group items
 
@@ -521,7 +521,7 @@ def main(CAD_file):
 
     print("***flattenings terminados con exito***")
 
-    #*********OCULTAR TODO LO QUE NO ES NECESARIO **********
+    #********* OCULTAR TODO LO QUE NO ES NECESARIO **********
 
     selection1 = partDocument1.Selection
     visPropertySet1 = selection1.VisProperties
@@ -538,20 +538,20 @@ def main(CAD_file):
     visPropertySet1.SetShow(1)
     selection1.Clear()
 
-    #****************CREAR UN GEOMETRICAL SET ESPECIAL QUE CONTENGA LOS RESULTADOS**************
+    #**************** CREAR UN GEOMETRICAL SET ESPECIAL QUE CONTENGA LOS RESULTADOS **************
 
     flattGeoSet = partHBs.Add()
     flattGeoSet.Name = "Flattening_Geometry"
     part1.InWorkObject = flattGeoSet
     part1.Update()
 
-    # *********CREAR UN DRAWING DONDE SE IRAN AÑADIENDO HOJAS POR CADA CAPA**********
+    # ********* CREAR UN DRAWING DONDE SE IRAN AÑADIENDO HOJAS POR CADA CAPA **********
 
     documents2 = CATIA.Documents
     drawingDocument1 = documents2.Add("Drawing")
     partDocument1.Activate()
 
-    # ************CREAR LOS SKETCH CON LOS PATRONES DE CORTE Y PASARLO A UN DRAWING********************
+    # ************ CREAR LOS SKETCH CON LOS PATRONES DE CORTE Y PASARLO A UN DRAWING ********************
 
     for s in range(1, pliesHBs.Count + 1):
        
@@ -560,12 +560,12 @@ def main(CAD_file):
 
     print("***Cantidad de material obtenida correctamente***")
 
-    # ********CERRAMOS EL ARCHIVO Y DEJAMOS ACTIVA LA VISTA DEL DRAWING PARA FINALIZAR***********
+    # ******** CERRAMOS EL ARCHIVO Y DEJAMOS ACTIVA LA VISTA DEL DRAWING PARA FINALIZAR ***********
 
     partDocument1.Close()
     drawingDocument1.Activate()
 
-    # *******CREAMOS TABLAS CON LOS DATOS OBTENIDOS************
+    # ******* CREAMOS TABLAS CON LOS DATOS OBTENIDOS ************
 
     data = {'longitud por corte': long_trozo,
             'numero de cortes': cortes,
@@ -592,7 +592,7 @@ def main(CAD_file):
     df.rename(index={last_row : 'Total pieza'}, inplace=True)
     print(df)
 
-    # ***********CREAR DOCUMENTO DE EXCEL CON LOS RESULTADOS****************
+    # *********** CREAR DOCUMENTO DE EXCEL CON LOS RESULTADOS ****************
 
     df.to_excel(f"{results_folder_path}\patrones_corte_{CAD_file}.xlsx")
 
