@@ -100,8 +100,8 @@ def main(CAD_file):
 
         ply_selection()
 
-        doubleClick_on_img('flattening_icon.png', 0.9, 0.0)
-
+        # doubleClick_on_img('flattening_icon.png', 0.9, 0.0)
+        click_on_img('flattening_icon.png', 0.9, 0.0)
         click_on_img('xy_plane.png', 0.6, 1)
 
         click_on_img('ok_button.png', 0.8, 1)
@@ -117,7 +117,7 @@ def main(CAD_file):
         """ 
 
         def create_sketch(sketch_name):
-            """"
+            """
             Crea un nuevo sketch en el plano xy
             - Inputs
                 - sketch_name [string]: nombre del nuevo sketch que queremos crear
@@ -343,7 +343,7 @@ def main(CAD_file):
             constraint1 = constraints1.AddBiEltCst(10, reference1, reference2)  #10=catCstTypeHorizontality
             constraint1.Mode = 0    #catCstModeDrivingDimension
 
-            # Se impone la condicion de que coincida con el limite del flattening
+            # Se impone la condicion de que coincida con el limite inferior del flattening
             reference3 = part1.CreateReferenceFromObject(linea_10inf)
             constraint4 = constraints1.AddBiEltCst(1, reference1, reference3)   #1=catCstTypeDistance
             constraint4.Mode = 0    #catCstModeDrivingDimension
@@ -439,7 +439,7 @@ def main(CAD_file):
             """
 
             selection1 = partDocument1.Selection
-            visPropertySet1 = selection1.VisPropertie
+            visPropertySet1 = selection1.VisProperties
             selection1.Add(sketch)     
             visPropertySet1.SetShow(1)      # 0=show    1=hide
             selection1.Clear()
@@ -460,8 +460,8 @@ def main(CAD_file):
         point_coincidence(endPoint_10dcha, endPoint_10inf)
         point_coincidence(endPoint_10izq, startPoint_10inf)
 
-        length = measure(linea_10dcha)
-        division = length/150
+        width = measure(linea_10dcha)
+        division = width/150
 
         # numero de cortes que necesitara la capa
         num_tape = int(np.ceil(division))
@@ -469,22 +469,22 @@ def main(CAD_file):
         print(f"numero de cortes de la capa {s} = {num_tape}")
 
         # longitud de los cortes de la capa
-        width = measure(linea_10sup)
-        long_trozo.append(width)
-        print(f"longitud de la cinta {s} = {width}")
+        length = measure(linea_10sup)
+        long_trozo.append(length)
+        print(f"longitud de la cinta {s} = {length}")
 
         # longitud total que ha de ser cortada para la capa
-        total_tape = num_tape * width
+        total_tape = num_tape * length
         long_tot.append(total_tape)
         print(f"longitud total necesaria para la capa {s} = {total_tape}")
 
-        linea = first_line_UD(5000.0, width/2 + 50, -(width/2 + 50))
+        linea = first_line_UD(5000.0, length/2 + 50, -(length/2 + 50))
 
         lines_drawn = 0
 
         while lines_drawn < num_tape:
 
-            linea = lines_UD(5000.0, width/2 + 50, -(width/2 + 50))
+            linea = lines_UD(5000.0, length/2 + 50, -(length/2) - 50)
 
             lines_drawn = lines_drawn + 1
 
