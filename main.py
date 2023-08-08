@@ -57,22 +57,22 @@ def main(CAD_file):
 
             pyautogui.click(img_X,img_Y)
 
-        def doubleClick_on_img(img, confidence_number, espera):
-            """
-            Hace doble click sobre un icono
-            - Inputs
-                - img [string]: icono a seleccionar guardado como archivo .png
-                - confidence_number [long]: porcentaje de similitud que debe encontrar con la imagen
-                - espera [long]: tiempo de espera antes de ejecutar la función
-            - Output
-            """
-            time.sleep(espera)
+        # def doubleClick_on_img(img, confidence_number, espera):
+        #     """
+        #     Hace doble click sobre un icono
+        #     - Inputs
+        #         - img [string]: icono a seleccionar guardado como archivo .png
+        #         - confidence_number [long]: porcentaje de similitud que debe encontrar con la imagen
+        #         - espera [long]: tiempo de espera antes de ejecutar la función
+        #     - Output
+        #     """
+        #     time.sleep(espera)
 
-            img_location = pyautogui.locateCenterOnScreen(img, confidence=confidence_number)
-            img_X = img_location[0]
-            img_Y = img_location[1]
+        #     img_location = pyautogui.locateCenterOnScreen(img, confidence=confidence_number)
+        #     img_X = img_location[0]
+        #     img_Y = img_location[1]
 
-            pyautogui.doubleClick(img_X,img_Y)
+        #     pyautogui.doubleClick(img_X,img_Y)
 
         def ply_selection():
             """
@@ -484,7 +484,7 @@ def main(CAD_file):
 
         while lines_drawn < num_tape:
 
-            linea = lines_UD(5000.0, length/2 + 50, -(length/2) - 50)
+            linea = lines_UD(5000.0, length/2 + 50, -(length/2 + 50))
 
             lines_drawn = lines_drawn + 1
 
@@ -567,14 +567,14 @@ def main(CAD_file):
 
     # ******* CREAMOS TABLAS CON LOS DATOS OBTENIDOS ************
 
-    data = {'longitud por corte': long_trozo,
+    data = {'longitud por corte (mm)': long_trozo,
             'numero de cortes': cortes,
-            'Longitud total': long_tot
+            'Longitud total (mm)': long_tot
             }
 
 
     total_long = sum(long_tot)
-    print("longitud total de la pieza = ", total_long)
+    print("longitud total de la pieza = ", total_long, "mm")
 
     total_cuts = sum(cortes)
     print("numero total de cortes necesarios = ", total_cuts)
